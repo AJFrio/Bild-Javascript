@@ -1,5 +1,7 @@
 # Bild JavaScript API Client
 
+## Work in progress
+
 This project is a JavaScript client for interacting with the Bild API. It allows you to manage users, projects, files, and generate file formats like STL and STEP.
 
 ## Features
