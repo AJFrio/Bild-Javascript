@@ -1,6 +1,15 @@
 {
+  "name": "bild-javascript",
+  "version": "0.1.0",
+  "description": "JavaScript SDK for the Bild External API",
+  "main": "src/index.js",
+  "type": "commonjs",
+  "scripts": {
+    "test": "node -e \"const m=require('./src'); console.log('ok', !!m.BildClient)\""
+  },
+  "keywords": ["bild", "api", "sdk"],
+  "license": "MIT",
   "dependencies": {
-    "axios": "^1.7.9",
-    "dotenv": "^16.4.7"
+    "axios": "^1.11.0"
   }
 }

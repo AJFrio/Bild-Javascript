@@ -1,83 +1,66 @@
-# Bild JavaScript API Client
+# bild-javascript
 
-## Work in progress
+Clean JavaScript SDK for the Bild External API.
 
-This project is a JavaScript client for interacting with the Bild API. It allows you to manage users, projects, files, and generate file formats like STL and STEP.
+## Install
 
-## Features
-
-- Authenticate using an API key
-- Manage users and projects
-- Retrieve files and metadata
-- Generate STL and STEP file formats
-
-## Prerequisites
-
-- Node.js installed on your machine
-- An API key from Bild
-
-## Installation
-
-1. Clone the repository:
-
-   ```bash
-   git clone https://github.com/AJFrio/Bild-Javascript.git
-   cd Bild-Javascript
-   ```
-
-2. Install the dependencies:
-
-   ```bash
-   npm install
-   ```
-
-## Configuration
-
-Set your Bild API key in the environment variables. You can do this by creating a `.env` file in the root directory of the project:
-
-```
-BILD_API_KEY=your_api_key_here
+```bash
+npm install
 ```
 
-Alternatively, you can pass the API key directly to the `Bild` class constructor.
+## Quick start
 
-## Usage
+```js
+const { BildClient } = require('bild-javascript');
 
-Here's a basic example of how to use the Bild client:
+const client = new BildClient({ token: process.env.BILD_API_KEY });
 
-```javascript
-const Bild = require('./bild');
-
-const bildClient = new Bild(); // Uses API key from environment variables
-
-async function main() {
-  try {
-    const users = await bildClient.getAllUsers();
-    console.log(users);
-  } catch (error) {
-    console.error(error.message);
-  }
-}
-
-main();
+const projects = await client.api.projects.list();
+const users = await client.api.users.list();
 ```
 
-## Methods
+## Base URL
 
-- `getAllUsers()`: Retrieve all users.
-- `addUsersToBild(emails, role, projects)`: Add users to Bild.
-- `getAllProjects()`: Retrieve all projects.
-- `getAllFiles(projectId)`: Retrieve all files in a project.
-- `generateSTL(projectId, branchId, fileId, fileVersion)`: Generate an STL file.
-- `generateSTEP(projectId, branchId, fileId, fileVersion)`: Generate a STEP file.
-- `getAllMetadataFields()`: Retrieve all metadata fields.
-- `getMetadataFromFile(projectId, branchId, fileId)`: Retrieve metadata from a file.
-- `getLatestFileVersion(projectId, branchId, fileId)`: Retrieve the latest file version.
+Default:
 
-## Error Handling
+- `https://api.portle.io/api`
 
-The client throws errors for authentication issues, missing paths, and missing tokens. Ensure you handle these errors in your application.
+Override:
 
-## License
+```js
+const client = new BildClient({
+  token: process.env.BILD_API_KEY,
+  baseUrl: 'https://api.portle.io/api'
+});
+```
 
-This project is licensed under the MIT License. 
+## Implemented modules
+
+- `api.users`
+  - `list()`
+  - `add({ emails, role = 'Member', projects = [] })`
+- `api.projects`
+  - `list()`
+  - `users(projectId)`
+  - `files(projectId)`
+- `api.files`
+  - `latestVersion(projectId, branchId, fileId)`
+  - `toSTL(projectId, branchId, fileId, fileVersion)`
+  - `toSTEP(projectId, branchId, fileId, fileVersion)`
+- `api.metadata`
+  - `fields()`
+  - `fileMetadata(projectId, branchId, fileId)`
+- `api.search`
+  - `query(payload)`
+
+## Low-level escape hatch
+
+```js
+await client.get('projects');
+await client.post('some/path', { x: 1 });
+```
+
+## Notes
+
+This SDK was rebuilt from scratch and focuses on a stable core + easy extension.
+If an endpoint path differs in your tenant/version, use low-level methods and extend resource methods quickly.
