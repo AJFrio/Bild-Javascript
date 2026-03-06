@@ -1,6 +1,6 @@
 # bild-javascript
 
-Clean JavaScript SDK for the Bild External API.
+JavaScript SDK for the Bild External API.
 
 ## Install
 
@@ -14,53 +14,44 @@ npm install
 const { BildClient } = require('bild-javascript');
 
 const client = new BildClient({ token: process.env.BILD_API_KEY });
-
 const projects = await client.api.projects.list();
-const users = await client.api.users.list();
 ```
 
 ## Base URL
 
-Default:
-
-- `https://api.portle.io/api`
-
-Override:
+Default: `https://api.portle.io/api`
 
 ```js
-const client = new BildClient({
-  token: process.env.BILD_API_KEY,
-  baseUrl: 'https://api.portle.io/api'
-});
+const client = new BildClient({ token: process.env.BILD_API_KEY, baseUrl: 'https://api.portle.io/api' });
 ```
 
-## Implemented modules
+## Resource coverage
 
 - `api.users`
-  - `list()`
-  - `add({ emails, role = 'Member', projects = [] })`
 - `api.projects`
-  - `list()`
-  - `users(projectId)`
-  - `files(projectId)`
+- `api.projectUsers`
+- `api.branchesCommits`
 - `api.files`
-  - `latestVersion(projectId, branchId, fileId)`
-  - `toSTL(projectId, branchId, fileId, fileVersion)`
-  - `toSTEP(projectId, branchId, fileId, fileVersion)`
-- `api.metadata`
-  - `fields()`
-  - `fileMetadata(projectId, branchId, fileId)`
+- `api.fileUpload`
+- `api.fileCheckinCheckout`
+- `api.sharedLinks`
+- `api.filesMoveDelete`
+- `api.filesMetadata`
+- `api.feedbackItems`
+- `api.packages`
+- `api.revisions`
+- `api.approvals`
+- `api.boms`
 - `api.search`
-  - `query(payload)`
 
-## Low-level escape hatch
+## Escape hatch
 
 ```js
 await client.get('projects');
-await client.post('some/path', { x: 1 });
+await client.post('custom/path', { x: 1 });
 ```
 
 ## Notes
 
-This SDK was rebuilt from scratch and focuses on a stable core + easy extension.
-If an endpoint path differs in your tenant/version, use low-level methods and extend resource methods quickly.
+The SDK is modular and easy to extend.
+If your tenant/version has route differences, use low-level methods and add/adjust resource methods quickly.
