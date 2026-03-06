@@ -55,6 +55,30 @@ class BildClient {
   post(path, data, params) { return this.request('POST', path, { params, data }); }
   put(path, data, params) { return this.request('PUT', path, { params, data }); }
   delete(path, params) { return this.request('DELETE', path, { params }); }
+
+  async resolveBranchId(projectId, branchId = null) {
+    if (branchId) return branchId;
+    const payload = await this.get(`projects/${projectId}/branches`);
+    const branches = pickList(payload);
+    if (!branches.length) throw new Error('No branches found and no branchId provided');
+
+    const preferred =
+      branches.find((b) => b?.isMain || b?.isDefault || b?.default) ||
+      branches.find((b) => ['main', 'master'].includes(String(b?.name || '').toLowerCase())) ||
+      branches[0];
+
+    const value = preferred?.id || preferred?.branchId;
+    if (!value) throw new Error('Could not determine default branchId');
+    return value;
+  }
+
+  async resolveFileVersion(projectId, branchId, fileId, fileVersion = null) {
+    if (fileVersion) return fileVersion;
+    const latest = await this.get(`projects/${projectId}/branches/${branchId}/files/${fileId}/latestFileVersion`);
+    const value = pickFromResponse(latest, 'fileVersion', 'id', 'versionId', 'latestFileVersion');
+    if (!value) throw new Error('Could not determine fileVersion automatically');
+    return String(value);
+  }
 }
 
 class UsersAPI {
@@ -91,13 +115,19 @@ class FilesAPI {
     if (branchId) return this.client.get(`projects/${projectId}/branches/${branchId}/files`);
     return this.client.get(`projects/${projectId}/files`);
   }
-  get(projectId, branchId, fileId) { return this.client.get(`projects/${projectId}/branches/${branchId}/files/${fileId}`); }
-  latestVersion(projectId, branchId, fileId) {
-    return this.client.get(`projects/${projectId}/branches/${branchId}/files/${fileId}/latestFileVersion`);
+  async get(projectId, branchId, fileId) {
+    const resolvedBranchId = await this.client.resolveBranchId(projectId, branchId);
+    return this.client.get(`projects/${projectId}/branches/${resolvedBranchId}/files/${fileId}`);
   }
-  universalFormat(projectId, branchId, fileId, { fileVersion, outputFormat }) {
-    return this.client.post(`projects/${projectId}/branches/${branchId}/files/${fileId}/universalFormat`, {
-      fileVersion,
+  async latestVersion(projectId, branchId, fileId) {
+    const resolvedBranchId = await this.client.resolveBranchId(projectId, branchId);
+    return this.client.get(`projects/${projectId}/branches/${resolvedBranchId}/files/${fileId}/latestFileVersion`);
+  }
+  async universalFormat(projectId, branchId, fileId, { fileVersion = null, outputFormat }) {
+    const resolvedBranchId = await this.client.resolveBranchId(projectId, branchId);
+    const resolvedFileVersion = await this.client.resolveFileVersion(projectId, resolvedBranchId, fileId, fileVersion);
+    return this.client.post(`projects/${projectId}/branches/${resolvedBranchId}/files/${fileId}/universalFormat`, {
+      fileVersion: resolvedFileVersion,
       universalFileFormat: outputFormat
     });
   }
@@ -179,6 +209,27 @@ class BOMsAPI {
 class SearchAPI {
   constructor(client) { this.client = client; }
   query(payload) { return this.client.put('search', payload); }
+}
+
+function pickFromResponse(payload, ...keys) {
+  if (payload && typeof payload === 'object' && !Array.isArray(payload)) {
+    for (const key of keys) {
+      if (payload[key]) return payload[key];
+    }
+    if (payload.data && typeof payload.data === 'object' && !Array.isArray(payload.data)) {
+      return pickFromResponse(payload.data, ...keys);
+    }
+  }
+  return null;
+}
+
+function pickList(payload) {
+  if (Array.isArray(payload)) return payload;
+  if (payload && typeof payload === 'object') {
+    if (Array.isArray(payload.data)) return payload.data;
+    if (Array.isArray(payload.items)) return payload.items;
+  }
+  return [];
 }
 
 module.exports = { BildClient, DEFAULT_BASE_URL };

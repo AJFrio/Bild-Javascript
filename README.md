@@ -51,6 +51,13 @@ await client.get('projects');
 await client.post('custom/path', { x: 1 });
 ```
 
+## Smart defaults
+
+For methods that require `branchId` and/or `fileVersion`, you can pass `null` and the SDK will auto-resolve:
+
+- default branch: prefers `isMain`/`isDefault`, then `main`/`master`, then first branch
+- file version: resolves from `latestFileVersion`
+
 ## Notes
 
 The SDK is modular and easy to extend.
