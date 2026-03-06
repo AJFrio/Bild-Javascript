@@ -5,7 +5,7 @@
   "main": "src/index.js",
   "type": "commonjs",
   "scripts": {
-    "test": "node -e \"const m=require('./src'); console.log('ok', !!m.BildClient)\""
+    "test": "node --test"
   },
   "keywords": ["bild", "api", "sdk"],
   "license": "MIT",
